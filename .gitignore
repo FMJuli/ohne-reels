@@ -1,0 +1,7 @@
+# Wird vom Workflow erzeugt – nicht einchecken
+*.xcodeproj
+build/
+Payload/
+*.ipa
+.DS_Store
+xcuserdata/
