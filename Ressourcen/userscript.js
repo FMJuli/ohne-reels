@@ -281,6 +281,9 @@
     'html[data-or-seite="explore"] a[href*="/p/"], html[data-or-seite="explore"] a[href*="/reel/"] { visibility: hidden !important; pointer-events: none !important; }',
     'html[data-or-seite="explore"] a[href^="/explore/tags/"], html[data-or-seite="explore"] a[href^="/explore/locations/"], html[data-or-seite="explore"] a[href^="/explore/search/keyword"] { display: none !important; }',
 
+    // Reel-Betrachter: zu schmal geratene Rahmen auf volle Breite ziehen (markiert von Abschnitt 5f).
+    '[data-or-breit] { width: 100% !important; max-width: none !important; min-width: 100% !important; aspect-ratio: auto !important; }',
+
     // Profile: Beitragsraster per Einstellung aus.
     'html[data-or-seite="profil"][data-or-raster="aus"] a[href*="/p/"], html[data-or-seite="profil"][data-or-raster="aus"] a[href*="/reel/"] { visibility: hidden !important; pointer-events: none !important; }'
   ].join('\n');
@@ -514,6 +517,35 @@
     });
   }
 
+  // 5f. Reel-Betrachter auf volle Breite.
+  //     Instagram gibt dem Reel einen Rahmen im Verhältnis 9:16, berechnet aus der Höhe. Weil unter dem
+  //     WebView die Tab-Leiste der App sitzt, ist das Fenster niedriger als von Instagram erwartet – der
+  //     Rahmen wird schmaler als der Bildschirm, rechts bleibt ein schwarzer Balken und die Symbole
+  //     werden abgeschnitten. Solche Rahmen um ein bildschirmfüllendes Video werden hier markiert.
+  function istGross(video) {
+    var hoehe = window.innerHeight;
+    var kasten = video.getBoundingClientRect();
+    return kasten.height >= hoehe * VIDEO_MINDESTHOEHE && kasten.top < hoehe * 0.3 && kasten.bottom > hoehe * 0.7;
+  }
+
+  function verbreitereBetrachter() {
+    var breite = window.innerWidth;
+    alle('video').filter(istGross).forEach(function (video) {
+      var element = video.parentElement;
+      var tiefe = 0;
+      while (element && element !== document.body && tiefe < 12) {
+        if (!element.hasAttribute('data-or-breit')) {
+          var kasten = element.getBoundingClientRect();
+          if (kasten.width < breite - 4 && kasten.width > breite * 0.6 && kasten.height >= window.innerHeight * 0.6) {
+            element.setAttribute('data-or-breit', '1');
+          }
+        }
+        element = element.parentElement;
+        tiefe++;
+      }
+    });
+  }
+
   // Jeder Schritt einzeln abgesichert: Ein Fehler in einem Schritt hält die anderen nicht auf.
   function versuche(schritt) {
     try { schritt(); } catch (e) { /* egal */ }
@@ -530,6 +562,7 @@
     versuche(versteckeAppHinweise);
     versuche(findeLeiste);
     if (typ === 'home') { versuche(filtereFeed); }
+    if (typ !== 'home' && typ !== 'stories') { versuche(verbreitereBetrachter); }
     versuche(versteckeVorschlaege);
   }
 
@@ -683,6 +716,18 @@
     }
     var videos = alle('video');
     zeilen.push('videos=' + videos.length + videos.slice(0, 3).map(function (video) { return '\n  ' + masse(video); }).join(''));
+    // Breiten der Rahmen um das erste große Video, von innen nach außen (* = von 5f verbreitert).
+    var grosses = videos.filter(istGross)[0];
+    if (grosses) {
+      var kette = [];
+      var rahmen = grosses.parentElement;
+      for (var j = 0; rahmen && rahmen !== document.body && j < 12; j++) {
+        var r = rahmen.getBoundingClientRect();
+        kette.push(Math.round(r.width) + 'x' + Math.round(r.height) + (rahmen.hasAttribute('data-or-breit') ? '*' : ''));
+        rahmen = rahmen.parentElement;
+      }
+      zeilen.push('rahmen=' + kette.join(' '));
+    }
     // Was liegt am rechten Rand, Bildschirmmitte? (für den schwarzen Balken)
     var rechts = document.elementFromPoint(window.innerWidth - 8, window.innerHeight / 2);
     for (var i = 0; rechts && i < 3; i++) {
