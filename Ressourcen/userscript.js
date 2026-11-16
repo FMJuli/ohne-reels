@@ -550,14 +550,58 @@
   // verschluckt – außer in Dialogen (z. B. Kommentare). Regel 1 oben ist die zweite Absicherung:
   // Wechselt die Adresse doch auf ein anderes Reel, wird das erlaubte Reel neu geladen.
 
+  //
+  // Die Sperre hängt NICHT nur an der Adresse: Aus den Nachrichten heraus öffnet Instagram ein Reel
+  // auch als Überlagerung, ohne die Adresse zu ändern. Deshalb wird zusätzlich am Inhalt erkannt,
+  // ob gerade ein bildschirmfüllendes Video gezeigt wird.
+
+  // Ab diesem Anteil der Bildschirmhöhe gilt ein Video als "bildschirmfüllend" (Reel-Betrachter).
+  var VIDEO_MINDESTHOEHE = 0.7;
+
   var startX = 0;
   var startY = 0;
+  var gesperrt = false;   // wird bei jedem Berührungsbeginn neu bestimmt
 
-  function wischSperreAktiv() {
+  // Gibt es in "basis" ein Video, das gerade (fast) den ganzen Bildschirm füllt?
+  function hatGrossesVideo(basis) {
+    var hoehe = window.innerHeight;
+    return alle('video', basis).some(function (video) {
+      var kasten = video.getBoundingClientRect();
+      return kasten.height >= hoehe * VIDEO_MINDESTHOEHE &&
+             kasten.top < hoehe * 0.3 && kasten.bottom > hoehe * 0.7;
+    });
+  }
+
+  // Nächster Vorfahre, der sich senkrecht scrollen lässt (null = die Seite selbst scrollt).
+  function scrollBehaelter(element) {
+    while (element && element !== document.body && element !== wurzel) {
+      if (element.scrollHeight > element.clientHeight + 10) {
+        var art = getComputedStyle(element).overflowY;
+        if (art === 'auto' || art === 'scroll' || art === 'overlay') { return element; }
+      }
+      element = element.parentElement;
+    }
+    return null;
+  }
+
+  function sollSperren(ziel) {
     var typ = wurzel.getAttribute('data-or-seite');
+    // Feed und Stories sind nie betroffen (Videos im Feed blendet Abschnitt 5d ohnehin aus).
+    if (typ === 'home' || typ === 'stories') { return false; }
+    if (!ziel || !ziel.closest) { return false; }
+
+    // Fall 1: Der Finger liegt in einer scrollbaren Liste. Gesperrt wird sie nur, wenn sie selbst
+    // das bildschirmfüllende Video enthält – Kommentare und der Chatverlauf bleiben scrollbar.
+    var behaelter = scrollBehaelter(ziel);
+    if (behaelter) { return hatGrossesVideo(behaelter); }
+
+    // Fall 2: Kein eigener Scrollbereich (die Seite scrollt, oder Instagram wertet die Wischgeste
+    // selbst aus). Dialoge ohne Video (z. B. Kommentare, Teilen) bleiben bedienbar.
+    var dialog = ziel.closest('[role="dialog"]');
+    if (dialog && !dialog.querySelector('video')) { return false; }
     if (typ === 'betrachter') { return true; }
-    // Einzelansicht mit mehreren Videos = in Wahrheit ein wischbarer Betrachter.
-    return typ === 'reel' && document.querySelectorAll('video').length > 1;
+    if (typ === 'reel' && document.querySelectorAll('video').length > 1) { return true; }
+    return hatGrossesVideo(document);
   }
 
   document.addEventListener('touchstart', function (ereignis) {
@@ -565,12 +609,12 @@
       startX = ereignis.touches[0].clientX;
       startY = ereignis.touches[0].clientY;
     }
+    gesperrt = false;
+    try { gesperrt = sollSperren(ereignis.target); } catch (e) { gesperrt = false; }
   }, { capture: true, passive: true });
 
   document.addEventListener('touchmove', function (ereignis) {
-    if (!wischSperreAktiv() || ereignis.touches.length === 0) { return; }
-    var ziel = ereignis.target;
-    if (ziel && ziel.closest && ziel.closest('[role="dialog"]')) { return; }
+    if (!gesperrt || ereignis.touches.length === 0) { return; }
     var dx = Math.abs(ereignis.touches[0].clientX - startX);
     var dy = Math.abs(ereignis.touches[0].clientY - startY);
     if (dy > dx) {
