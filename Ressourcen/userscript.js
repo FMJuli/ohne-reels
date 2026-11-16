@@ -68,7 +68,7 @@
   // ───────────────────────────────────────────────────────────────────────────
 
   var wurzel = document.documentElement;
-  var config = { feed: true, raster: true, navAus: true };
+  var config = { feed: true, raster: true, navAus: true, diagnose: false };
 
   function uebernehmeConfig(neu) {
     if (!neu) { return; }
@@ -611,6 +611,9 @@
     }
     gesperrt = false;
     try { gesperrt = sollSperren(ereignis.target); } catch (e) { gesperrt = false; }
+    if (config.diagnose) {
+      try { letzteBeruehrung = beschreibeBeruehrung(ereignis.target); } catch (e2) { letzteBeruehrung = 'Fehler: ' + e2; }
+    }
   }, { capture: true, passive: true });
 
   document.addEventListener('touchmove', function (ereignis) {
@@ -624,7 +627,79 @@
   }, { capture: true, passive: false });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // 7. SCHNITTSTELLE FÜR DIE APP
+  // 7. DIAGNOSE (nur wenn in den Einstellungen eingeschaltet)
+  // ───────────────────────────────────────────────────────────────────────────
+  // Zeigt einen Kasten mit technischen Angaben über der Seite. Gedacht für einen Screenshot,
+  // wenn etwas nicht so aussieht oder sich nicht so verhält wie erwartet. Es wird nichts verschickt.
+
+  var letzteBeruehrung = '–';
+  var diagnoseKasten = null;
+
+  function masse(element) {
+    var k = element.getBoundingClientRect();
+    return Math.round(k.left) + ',' + Math.round(k.top) + ' ' + Math.round(k.width) + 'x' + Math.round(k.height);
+  }
+
+  function kurz(element) {
+    if (!element || !element.tagName) { return '–'; }
+    var rolle = element.getAttribute('role');
+    return element.tagName.toLowerCase() + (rolle ? '[' + rolle + ']' : '') + ' ' + masse(element);
+  }
+
+  function beschreibeBeruehrung(ziel) {
+    var behaelter = scrollBehaelter(ziel);
+    var dialog = ziel && ziel.closest ? ziel.closest('[role="dialog"]') : null;
+    return 'gesperrt=' + gesperrt + ' ziel=' + kurz(ziel) +
+      '\n  scroller=' + (behaelter
+        ? kurz(behaelter) + ' inhalt=' + behaelter.scrollHeight + ' pos=' + Math.round(behaelter.scrollTop) +
+          ' videos=' + behaelter.querySelectorAll('video').length + ' gross=' + hatGrossesVideo(behaelter)
+        : 'keiner (seite=' + wurzel.scrollHeight + ')') +
+      '\n  dialog=' + (dialog ? 'ja videos=' + dialog.querySelectorAll('video').length : 'nein');
+  }
+
+  function zeigeDiagnose() {
+    if (!config.diagnose || !document.body) {
+      if (diagnoseKasten) { diagnoseKasten.remove(); diagnoseKasten = null; }
+      return;
+    }
+    if (!diagnoseKasten) {
+      diagnoseKasten = document.createElement('pre');
+      diagnoseKasten.setAttribute('style',
+        'position:fixed;left:6px;top:90px;max-width:86%;margin:0;padding:6px;z-index:2147483647;' +
+        'font:10px/1.3 Menlo,monospace;color:#7CFC00;background:rgba(0,0,0,0.8);border-radius:6px;' +
+        'white-space:pre-wrap;word-break:break-all;pointer-events:none;');
+    }
+    if (!diagnoseKasten.isConnected) { document.body.appendChild(diagnoseKasten); }
+
+    var zeilen = [];
+    zeilen.push('pfad=' + location.pathname);
+    zeilen.push('typ=' + wurzel.getAttribute('data-or-seite') + ' fenster=' + window.innerWidth + 'x' + window.innerHeight);
+    zeilen.push('breite html=' + wurzel.scrollWidth + ' body=' + document.body.scrollWidth +
+      ' scrollX=' + Math.round(window.scrollX));
+    if (window.visualViewport) {
+      var v = window.visualViewport;
+      zeilen.push('ansicht=' + Math.round(v.width) + 'x' + Math.round(v.height) + ' zoom=' + v.scale.toFixed(2) +
+        ' links=' + Math.round(v.offsetLeft));
+    }
+    var videos = alle('video');
+    zeilen.push('videos=' + videos.length + videos.slice(0, 3).map(function (video) { return '\n  ' + masse(video); }).join(''));
+    // Was liegt am rechten Rand, Bildschirmmitte? (für den schwarzen Balken)
+    var rechts = document.elementFromPoint(window.innerWidth - 8, window.innerHeight / 2);
+    for (var i = 0; rechts && i < 3; i++) {
+      zeilen.push('rechts' + i + '=' + kurz(rechts) + ' ' + getComputedStyle(rechts).backgroundColor);
+      rechts = rechts.parentElement;
+    }
+    zeilen.push('beruehrung: ' + letzteBeruehrung);
+    var text = zeilen.join('\n');
+    if (diagnoseKasten.textContent !== text) { diagnoseKasten.textContent = text; }
+  }
+
+  setInterval(function () {
+    try { zeigeDiagnose(); } catch (e) { /* egal */ }
+  }, 700);
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // 8. SCHNITTSTELLE FÜR DIE APP
   // ───────────────────────────────────────────────────────────────────────────
 
   window.__ohneReels = {

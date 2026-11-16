@@ -10,6 +10,7 @@ struct EinstellungenAnsicht: View {
     @AppStorage(Einstellungen.Schluessel.instagramLeisteAus) private var instagramLeisteAus = Einstellungen.Standard.instagramLeisteAus
     @AppStorage(Einstellungen.Schluessel.inkognito) private var inkognito = Einstellungen.Standard.inkognito
     @AppStorage(Einstellungen.Schluessel.benutzername) private var benutzername = ""
+    @AppStorage(Einstellungen.Schluessel.diagnose) private var diagnose = Einstellungen.Standard.diagnose
 
     @State private var zeigeLoeschfrage = false
 
@@ -50,6 +51,14 @@ struct EinstellungenAnsicht: View {
                 }
 
                 Section {
+                    Toggle("Diagnose anzeigen", isOn: $diagnose)
+                } header: {
+                    Text("Fehlersuche")
+                } footer: {
+                    Text("Blendet einen Kasten mit technischen Angaben über die Seite ein (Adresse, Maße, Wisch-Sperre). Nur einschalten, um einen Screenshot für die Fehlersuche zu machen. Es wird nichts verschickt.")
+                }
+
+                Section {
                     Text("Version \(versionsText)")
                         .foregroundStyle(Color.secondary)
                 } footer: {
@@ -81,6 +90,7 @@ struct EinstellungenAnsicht: View {
         .onChange(of: feedAn) { _ in modell.einstellungenGeaendert() }
         .onChange(of: profilRasterAn) { _ in modell.einstellungenGeaendert() }
         .onChange(of: instagramLeisteAus) { _ in modell.einstellungenGeaendert() }
+        .onChange(of: diagnose) { _ in modell.einstellungenGeaendert() }
         .onChange(of: inkognito) { _ in modell.inkognitoGeaendert() }
     }
 

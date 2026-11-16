@@ -54,7 +54,7 @@ Auf der Startseite des Repos rechts unter **Releases** liegt nach jedem Build di
 Am bequemsten direkt auf dem iPhone in Safari laden (bei öffentlichem Repo):
 
 ```
-https://github.com/DEINNAME/ohne-reels/releases/latest/download/OhneReels.ipa
+https://github.com/FMJuli/ohne-reels/releases/latest/download/OhneReels.ipa
 ```
 
 ### 4. Installation mit SideStore

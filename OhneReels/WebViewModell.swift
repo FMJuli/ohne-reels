@@ -119,6 +119,9 @@ final class WebViewModell: NSObject, ObservableObject {
         }
         // Videos (Stories) im Seitenlayout abspielen statt im Vollbild-Player.
         konfiguration.allowsInlineMediaPlayback = true
+        // Instagram verbietet das Zoomen per Seiteneinstellung (user-scalable=no). Safari übergeht das
+        // von sich aus, ein WKWebView nur mit diesem Schalter. Damit geht Aufziehen mit zwei Fingern.
+        konfiguration.ignoresViewportScaleLimits = true
         konfiguration.mediaTypesRequiringUserActionForPlayback = []
         // User-Agent wie mobiles Safari (siehe safariKennung).
         konfiguration.applicationNameForUserAgent = safariKennung()
