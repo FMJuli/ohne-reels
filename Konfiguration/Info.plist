@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>de</string>
+	<key>CFBundleDisplayName</key>
+	<string>Ohne Reels</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!-- Leerer Startbildschirm: sorgt für echte Vollbilddarstellung -->
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+
+	<!-- Texte der Berechtigungsabfragen (nötig für Stories, Beiträge und Fotos in Nachrichten) -->
+	<key>NSCameraUsageDescription</key>
+	<string>Die Kamera wird nur verwendet, wenn du in Instagram ein Foto oder Video für eine Story, einen Beitrag oder eine Nachricht aufnimmst.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Das Mikrofon wird nur verwendet, wenn du in Instagram ein Video oder eine Sprachnachricht aufnimmst.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Der Zugriff auf deine Fotos wird nur verwendet, wenn du in Instagram ein Bild oder Video zum Hochladen auswählst.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Damit kannst du Bilder aus Instagram in deiner Fotomediathek sichern.</string>
+</dict>
+</plist>

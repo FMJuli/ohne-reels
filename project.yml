@@ -1,0 +1,50 @@
+# XcodeGen-Projektbeschreibung.
+# Daraus erzeugt der GitHub-Workflow mit "xcodegen generate" die Datei OhneReels.xcodeproj.
+# Die .xcodeproj-Datei wird NICHT ins Repo eingecheckt.
+
+name: OhneReels
+
+options:
+  bundleIdPrefix: de.ohnereels
+  developmentLanguage: de
+  deploymentTarget:
+    iOS: "16.0"
+
+settings:
+  base:
+    # Swift-5-Sprachmodus: vermeidet die strengen Swift-6-Nebenläufigkeitsfehler.
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+
+targets:
+  OhneReels:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      # Swift-Code und Assets (App-Icon)
+      - path: OhneReels
+      # userscript.js – wird unverändert ins App-Paket kopiert
+      - path: Ressourcen
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.ohnereels.app
+        PRODUCT_NAME: OhneReels
+        INFOPLIST_FILE: Konfiguration/Info.plist
+        GENERATE_INFOPLIST_FILE: "NO"
+        # 1 = nur iPhone
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Unsigniert bauen – SideStore signiert die App beim Installieren selbst.
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGN_IDENTITY: ""
+
+schemes:
+  OhneReels:
+    build:
+      targets:
+        OhneReels: all
